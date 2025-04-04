@@ -1,51 +1,47 @@
 import './css/styles.css';
 import iziToast from 'izitoast';    
 import 'izitoast/dist/css/iziToast.min.css'
+import './css/loader.css';
 
 import {
     createGallery,
     clearGallery,
     showLoader,
-    hiddenLoader,
+    hideLoader,
 } from './js/render-function';
 
 import { getImagesByQuery } from './js/pixabay-api';
 
 const form  = document.querySelector('.form');
-const input = form.quarySelector('input[name="search-text"]');
-form.addEventListener('submit', async evt => {
+const input = form.querySelector('input[name="search-text"]');
+form.addEventListener('submit', evt => {
     evt.preventDefault();
+  
     const query = input.value.trim();
-    if(!query) {
-        iziToast.warning({
-            message: 'Поле пошуку не може бути порожнім!',
-      position: 'topRight',
-        });
-        return;
-    }
+    if (!query) return;
+  
     clearGallery();
     showLoader();
-
-    try {
-        const data = await getImagesByQuery(query);
-
-        if(data.hits.length === 0) {
-            iziToast.info({
-                message: 'На жаль, нічого не знайдено. Спробуй інше слово.',
-                position: 'topRight',
-            });
-
-        }else {
-            createGallery(data.hits);
-        }
-    } catch (err) {
-        iziToast.error({
-            message: 'Сталася помилка! Спробуй ще раз пізніше.',
-            position: 'topRight',
+  
+    getImagesByQuery(query)
+    .then(data => {
+        return new Promise(resolve => {
+          setTimeout(() => resolve(data), 1000);
         });
-        console.error(err);
-        
-    } finally {
-        hiddenLoader();
-    }
-});
+      })
+      .then(data => {
+        if (data.hits.length === 0) {
+          iziToast.info({ message: 'Нічого не знайдено' });
+          return;
+        }
+        createGallery(data.hits);
+      })
+      .catch(error => {
+        iziToast.error({ message: 'Помилка запиту' });
+        console.error(error);
+      })
+      .finally(() => {
+        hideLoader();
+        input.value = '';
+      });
+  });

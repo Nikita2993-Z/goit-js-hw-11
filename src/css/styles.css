@@ -10,3 +10,6 @@
 
 
 /* Sections style */
+@import url('./loader.css');
+@import url('./gallery.css');
+@import url('./form.css');
